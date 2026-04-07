@@ -1,3 +1,10 @@
 .venv/
 __pycache__/
 *.pyc
+.DS_Store
+Icon
+Icon?
+*.pth
+PlantVillage/
+saved_models/
+data/
