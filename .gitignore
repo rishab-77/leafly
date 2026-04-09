@@ -6,6 +6,5 @@ Icon
 Icon?
 *.pth
 PlantVillage/
-saved_models/
 data/
-data/
+leafly_data.zip
