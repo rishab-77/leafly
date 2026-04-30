@@ -13,6 +13,7 @@ export default function Navbar() {
 
   return (
     <motion.nav
+      className="navbar"
       initial={{ y: -60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -24,7 +25,7 @@ export default function Navbar() {
         boxShadow: '0 18px 60px rgba(0,0,0,0.16)',
       }}
     >
-      <div style={{
+      <div className="navbar-inner" style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         gap: '1rem', maxWidth: 1320, margin: '0 auto', padding: '0.95rem 2rem'
       }}>
@@ -47,11 +48,11 @@ export default function Navbar() {
       </Link>
 
       {/* Nav links */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+      <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
         {links.map(link => {
           const active = location.pathname === link.path
           return (
-            <Link key={link.path} to={link.path} style={{
+            <Link key={link.path} to={link.path} className="nav-link" style={{
               color: active ? 'var(--lime)' : 'rgba(245,240,232,0.65)',
               textDecoration: 'none', fontSize: '0.9rem',
               fontWeight: 400, letterSpacing: '0.05em',
@@ -63,7 +64,7 @@ export default function Navbar() {
           )
         })}
 
-        <Link to="/analyze">
+        <Link to="/analyze" className="nav-link nav-cta">
           <motion.button
             whileHover={{ scale: 1.03, boxShadow: '0 12px 32px rgba(168,255,62,0.18)' }}
             whileTap={{ scale: 0.97 }}

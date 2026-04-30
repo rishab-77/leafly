@@ -4,6 +4,8 @@ import UploadSection from '../components/UploadSection'
 import ResultCard from '../components/ResultCard'
 import { motion } from 'framer-motion'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
 export default function Analyze() {
   const [result, setResult]   = useState(null)
   const [loading, setLoading] = useState(false)
@@ -19,12 +21,12 @@ export default function Analyze() {
     formData.append('file', file)
 
     try {
-      const res = await axios.post('http://127.0.0.1:8000/predict', formData, {
+      const res = await axios.post(`${API_BASE_URL}/predict`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       setResult(res.data)
     } catch {
-      setError('Analysis failed. Make sure the Leafly API is running on port 8000.')
+      setError('Analysis failed. Make sure the Leafly API is running and VITE_API_URL is configured correctly.')
     } finally {
       setLoading(false)
     }

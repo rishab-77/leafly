@@ -87,3 +87,51 @@ body::before {
   z-index: 0;
   opacity: 0.35;
 }
+
+.navbar-inner {
+  width: 100%;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem !important;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .navbar-inner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .nav-links {
+    justify-content: space-between;
+    gap: 0.75rem !important;
+    width: 100%;
+  }
+
+  .nav-link {
+    display: block;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .nav-cta {
+    min-width: 100%;
+  }
+
+  .result-card-section {
+    padding: 0 1rem 4rem !important;
+  }
+
+  .result-card-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .result-card-image {
+    min-height: 220px;
+  }
+}

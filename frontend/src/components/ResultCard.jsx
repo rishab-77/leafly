@@ -22,6 +22,7 @@ export default function ResultCard({ result, preview, onReset }) {
 
   return (
     <motion.section
+      className="result-card-section"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7 }}
@@ -59,9 +60,9 @@ export default function ResultCard({ result, preview, onReset }) {
           </span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+        <div className="result-card-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
           {/* Left — image */}
-          <div style={{ position: 'relative', minHeight: 280 }}>
+          <div className="result-card-image" style={{ position: 'relative', minHeight: 280 }}>
             <img src={preview} alt="Analyzed leaf"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />

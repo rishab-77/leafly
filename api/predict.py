@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-from torchvision import transforms
 from PIL import Image
 import timm
 import json
 import io
 from pathlib import Path
+from preprocessing import get_inference_transforms
 
 # Paths
 BASE_DIR        = Path(__file__).parent.parent
@@ -15,15 +15,8 @@ CLASS_NAMES_PATH = BASE_DIR / "saved_models" / "class_names.json"
 # Device
 DEVICE = torch.device("cpu")  # Mac runs on CPU
 
-# Image transform — must match training exactly
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]
-    )
-])
+# Image transform — includes segmentation, CLAHE, resize, normalize
+transform = get_inference_transforms(img_size=224)
 
 
 def load_model():
