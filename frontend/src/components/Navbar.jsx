@@ -18,22 +18,25 @@ export default function Navbar() {
       transition={{ duration: 0.6, ease: 'easeOut' }}
       style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '1.2rem 3rem',
-        backdropFilter: 'blur(20px)',
-        background: 'rgba(10,26,15,0.85)',
-        borderBottom: '1px solid rgba(168,255,62,0.08)',
+        backdropFilter: 'blur(24px)',
+        background: 'rgba(10,26,15,0.92)',
+        borderBottom: '1px solid rgba(168,255,62,0.12)',
+        boxShadow: '0 18px 60px rgba(0,0,0,0.16)',
       }}
     >
-      {/* Logo */}
-      <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #a8ff3e, #2d8a00)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <Leaf size={16} color="#0a1a0f" strokeWidth={2.5} />
-        </div>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: '1rem', maxWidth: 1320, margin: '0 auto', padding: '0.95rem 2rem'
+      }}>
+        {/* Logo */}
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #a8ff3e, #2d8a00)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <Leaf size={18} color="#0a1a0f" strokeWidth={2.5} />
+          </div>
         <span style={{
           fontFamily: 'Cormorant Garamond, serif',
           fontSize: '1.4rem', fontWeight: 400,
@@ -44,13 +47,13 @@ export default function Navbar() {
       </Link>
 
       {/* Nav links */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
         {links.map(link => {
           const active = location.pathname === link.path
           return (
             <Link key={link.path} to={link.path} style={{
-              color: active ? 'var(--lime)' : 'rgba(245,240,232,0.6)',
-              textDecoration: 'none', fontSize: '0.85rem',
+              color: active ? 'var(--lime)' : 'rgba(245,240,232,0.65)',
+              textDecoration: 'none', fontSize: '0.9rem',
               fontWeight: 400, letterSpacing: '0.05em',
               borderBottom: active ? '1px solid var(--lime)' : '1px solid transparent',
               paddingBottom: '2px', transition: 'all 0.2s'
@@ -62,14 +65,12 @@ export default function Navbar() {
 
         <Link to="/analyze">
           <motion.button
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.03, boxShadow: '0 12px 32px rgba(168,255,62,0.18)' }}
             whileTap={{ scale: 0.97 }}
             style={{
               background: 'var(--lime)', color: 'var(--forest)',
-              border: 'none', borderRadius: '100px',
-              padding: '0.55rem 1.4rem',
-              fontFamily: 'DM Sans, sans-serif',
-              fontSize: '0.85rem', fontWeight: 500,
+              borderRadius: '100px', padding: '0.65rem 1.55rem',
+              fontFamily: 'DM Sans, sans-serif', fontSize: '0.9rem', fontWeight: 500,
               cursor: 'pointer', letterSpacing: '0.02em'
             }}
           >
@@ -77,6 +78,7 @@ export default function Navbar() {
           </motion.button>
         </Link>
       </div>
+    </div>
     </motion.nav>
   )
 }

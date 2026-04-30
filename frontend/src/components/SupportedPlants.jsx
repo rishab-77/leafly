@@ -49,20 +49,30 @@ export default function SupportedPlants() {
           }}>
             {category}
           </h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
             {entries.map(([key, info]) => (
               <div key={key} style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
                 background: 'var(--glass)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: '100px', padding: '0.4rem 1rem',
-                fontSize: '0.82rem', color: 'rgba(245,240,232,0.65)'
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 22, padding: '1.1rem', minHeight: 120,
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                gap: '0.75rem', cursor: 'default', transition: 'transform 0.2s, border-color 0.2s',
               }}>
-                <div style={{
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: sevColors[info.severity], flexShrink: 0
-                }} />
-                {info.display.split('·')[1]?.trim() || info.display}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                  <span style={{
+                    fontSize: '1rem', color: 'var(--ivory)',
+                    fontWeight: 500, lineHeight: 1.3
+                  }}>
+                    {info.display.split('·')[1]?.trim() || info.display}
+                  </span>
+                  <span style={{
+                    width: 10, height: 10, borderRadius: '50%',
+                    background: sevColors[info.severity], flexShrink: 0
+                  }} />
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'rgba(245,240,232,0.55)', lineHeight: 1.6 }}>
+                  {info.description}
+                </p>
               </div>
             ))}
           </div>

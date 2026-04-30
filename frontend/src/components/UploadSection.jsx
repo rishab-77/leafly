@@ -24,7 +24,7 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
   const handleReset = () => { setFile(null); setPreview(null) }
 
   return (
-    <section style={{ padding: '6rem 2rem', maxWidth: 760, margin: '0 auto' }}>
+    <section style={{ padding: '6rem 2rem', maxWidth: 860, margin: '0 auto' }}>
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -47,6 +47,12 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
           }}>
             Upload a leaf image
           </h2>
+          <p style={{
+            color: 'rgba(245,240,232,0.45)', fontSize: '0.95rem',
+            marginTop: '1rem', maxWidth: 520, margin: '1rem auto 0', lineHeight: 1.7
+          }}>
+            Capture a clear single leaf and get a fast disease prediction with treatment guidance.
+          </p>
         </div>
 
         {/* Dropzone */}
@@ -57,34 +63,35 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               {...getRootProps()}
               style={{
-                border: `2px dashed ${isDragActive ? 'var(--lime)' : 'rgba(168,255,62,0.2)'}`,
+                border: `2px dashed ${isDragActive ? 'var(--lime)' : 'rgba(168,255,62,0.18)'}`,
                 borderRadius: 'var(--radius)',
                 padding: '4rem 2rem',
                 textAlign: 'center', cursor: 'pointer',
-                background: isDragActive ? 'rgba(168,255,62,0.04)' : 'var(--glass)',
+                background: isDragActive ? 'rgba(168,255,62,0.07)' : 'var(--glass)',
                 transition: 'all 0.2s',
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(18px)',
+                boxShadow: 'var(--shadow-soft)',
               }}
             >
               <input {...getInputProps()} />
               <motion.div
                 animate={{ scale: isDragActive ? 1.1 : 1 }}
                 style={{
-                  width: 64, height: 64, borderRadius: '50%',
-                  background: 'rgba(168,255,62,0.1)',
+                  width: 68, height: 68, borderRadius: '50%',
+                  background: 'rgba(168,255,62,0.15)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   margin: '0 auto 1.5rem'
                 }}
               >
                 {isDragActive
-                  ? <ImageIcon size={28} color="var(--lime)" />
-                  : <Upload size={28} color="var(--lime)" />
+                  ? <ImageIcon size={32} color="var(--lime)" />
+                  : <Upload size={32} color="var(--lime)" />
                 }
               </motion.div>
               <p style={{ color: 'var(--ivory)', fontSize: '1rem', marginBottom: '0.5rem' }}>
                 {isDragActive ? 'Drop it here' : 'Drag & drop a leaf image'}
               </p>
-              <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.85rem' }}>
+              <p style={{ color: 'rgba(245,240,232,0.45)', fontSize: '0.9rem' }}>
                 or click to browse · JPG, PNG supported
               </p>
             </motion.div>
@@ -99,29 +106,30 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
                 overflow: 'hidden',
                 background: 'var(--glass)',
                 border: '1px solid var(--glass-border)',
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(18px)',
+                boxShadow: 'var(--shadow-soft)',
               }}
             >
               <div style={{ position: 'relative' }}>
                 <img
                   src={preview} alt="Leaf preview"
                   style={{
-                    width: '100%', maxHeight: 380,
+                    width: '100%', maxHeight: 420,
                     objectFit: 'cover', display: 'block'
                   }}
                 />
                 <div style={{
                   position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(10,26,15,0.8) 0%, transparent 50%)'
+                  background: 'linear-gradient(to top, rgba(10,26,15,0.92) 0%, transparent 55%)'
                 }} />
                 <button
                   onClick={handleReset}
                   style={{
-                    position: 'absolute', top: 12, right: 12,
-                    background: 'rgba(10,26,15,0.8)',
-                    border: '1px solid rgba(245,240,232,0.2)',
+                    position: 'absolute', top: 16, right: 16,
+                    background: 'rgba(10,26,15,0.85)',
+                    border: '1px solid rgba(245,240,232,0.18)',
                     color: 'var(--ivory)', borderRadius: '100px',
-                    padding: '0.4rem 1rem', fontSize: '0.8rem',
+                    padding: '0.45rem 1rem', fontSize: '0.85rem',
                     cursor: 'pointer', fontFamily: 'DM Sans, sans-serif'
                   }}
                 >
@@ -129,9 +137,14 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
                 </button>
               </div>
               <div style={{ padding: '1.5rem', textAlign: 'center' }}>
-                <p style={{ color: 'rgba(245,240,232,0.5)', fontSize: '0.85rem' }}>
+                <p style={{ color: 'rgba(245,240,232,0.55)', fontSize: '0.92rem', marginBottom: '0.25rem' }}>
                   Ready to analyze
                 </p>
+                {file && (
+                  <p style={{ color: 'rgba(245,240,232,0.35)', fontSize: '0.82rem' }}>
+                    {file.name}
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
@@ -144,13 +157,13 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               style={{
                 display: 'flex', alignItems: 'center', gap: '0.75rem',
-                background: 'rgba(255,77,77,0.08)',
-                border: '1px solid rgba(255,77,77,0.2)',
-                borderRadius: 12, padding: '1rem 1.25rem', marginTop: '1rem'
+                background: 'rgba(255,77,77,0.1)',
+                border: '1px solid rgba(255,77,77,0.24)',
+                borderRadius: 18, padding: '1rem 1.25rem', marginTop: '1.25rem'
               }}
             >
               <AlertCircle size={18} color="#ff4d4d" />
-              <p style={{ color: '#ff4d4d', fontSize: '0.9rem' }}>{error}</p>
+              <p style={{ color: '#ff4d4d', fontSize: '0.95rem', lineHeight: 1.5 }}>{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -161,19 +174,19 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ marginTop: '1.5rem', textAlign: 'center' }}
+              style={{ marginTop: '1.75rem', textAlign: 'center' }}
             >
               <motion.button
-                whileHover={{ scale: 1.03, boxShadow: '0 0 40px rgba(168,255,62,0.25)' }}
+                whileHover={{ scale: 1.03, boxShadow: '0 0 44px rgba(168,255,62,0.24)' }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleAnalyze}
                 disabled={loading}
                 style={{
-                  background: loading ? 'rgba(168,255,62,0.4)' : 'var(--lime)',
-                  color: 'var(--forest)', border: 'none',
-                  borderRadius: '100px', padding: '1rem 3rem',
-                  fontSize: '1rem', fontFamily: 'DM Sans, sans-serif',
-                  fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer',
+                  background: loading ? 'rgba(168,255,62,0.45)' : 'var(--lime)',
+                  color: 'var(--forest)', borderRadius: '100px',
+                  padding: '1rem 3rem', fontSize: '1rem',
+                  fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
                   transition: 'background 0.2s'
                 }}
