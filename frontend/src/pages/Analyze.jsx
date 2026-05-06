@@ -48,7 +48,20 @@ export default function Analyze() {
       })
       
     } catch (err) {
-// ... (rest of function)
+      const statusCode = err?.response?.status
+      const backendMessage = err?.response?.data?.detail
+
+      if (!err?.response) {
+        setError(
+          `Cannot reach Leafly API at ${API_BASE_URL}. Start the backend and verify VITE_API_URL in frontend/.env, then restart Vite.`
+        )
+      } else if (backendMessage) {
+        setError(`Analysis failed (${statusCode ?? 'error'}): ${backendMessage}`)
+      } else {
+        setError(
+          `Analysis failed with status ${statusCode ?? 'unknown'}. Make sure the Leafly API is running and VITE_API_URL is configured correctly.`
+        )
+      }
     } finally {
       setLoading(false)
     }
