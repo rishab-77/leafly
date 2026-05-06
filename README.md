@@ -1,37 +1,29 @@
 # 🌱 Leafly - Plant Disease Detection
 
-A modern web application that uses machine learning to detect plant diseases from leaf images. Upload a photo of a plant leaf and get instant disease diagnosis with treatment recommendations.
+A modern, premium web application that uses deep transfer learning to detect plant diseases from leaf images. Upload a photo of a plant leaf and get an instant, laboratory-grade disease diagnosis with treatment recommendations.
+
+Leafly is built as an undergraduate final-year project, achieving **98.84% test accuracy** across 15 different plant disease classes.
 
 ## ✨ Features
 
-- **AI-Powered Detection**: Advanced deep learning model trained on extensive plant disease datasets
-- **Real-time Analysis**: Instant disease detection and classification
-- **User-Friendly Interface**: Clean, responsive React frontend with drag-and-drop upload
-- **Comprehensive Database**: Supports multiple plant species and disease types
-- **Treatment Recommendations**: Get actionable advice for identified diseases
-- **FastAPI Backend**: High-performance REST API for reliable predictions
+- **AI-Powered Detection**: Advanced `EfficientNetB3` deep learning model trained on the PlantVillage dataset (20,637 images).
+- **Premium UI/UX**: A state-of-the-art dark mode interface featuring glassmorphism, animated mesh gradients, interactive 3D mockups, and "bento box" layouts.
+- **Real-time Analysis**: Simulated laser-scanning animations during upload, delivering fast inference via a FastAPI backend.
+- **Interactive Encyclopedia**: A beautifully animated, filterable database of all supported plant diseases.
+- **Treatment Recommendations**: Actionable, vetted agricultural advice for identified diseases.
 
 ## 🛠️ Tech Stack
 
 ### Backend
-- **FastAPI**: Modern, fast web framework for building APIs
-- **PyTorch**: Deep learning framework for model inference
-- **Timm**: PyTorch Image Models library
-- **Pillow**: Image processing library
+- **FastAPI**: High-performance REST API for serving the model.
+- **PyTorch 2.2**: Deep learning framework used for two-phase transfer learning and inference.
+- **OpenCV & Albumentations**: Image preprocessing (HSV segmentation, CLAHE contrast enhancement).
 
 ### Frontend
-- **React 18**: Modern JavaScript library for building user interfaces
-- **Vite**: Fast build tool and development server
-- **Axios**: HTTP client for API communication
-- **React Router**: Declarative routing for React
-- **Framer Motion**: Animation library for smooth interactions
-- **React Dropzone**: File upload component
-- **Lucide React**: Beautiful icon library
-
-### Machine Learning
-- **Model**: Fine-tuned vision transformer (ViT) or ResNet architecture
-- **Training**: Google Colab with GPU acceleration
-- **Dataset**: Plant disease image dataset with multiple classes
+- **React 18 + Vite**: Lightning-fast frontend framework and build tool.
+- **Framer Motion**: Complex physics-based layout animations and interactive hover states.
+- **React Dropzone**: Polished drag-and-drop file upload component.
+- **Lucide React**: Beautiful, consistent iconography.
 
 ## 🚀 Quick Start
 
@@ -44,107 +36,75 @@ A modern web application that uses machine learning to detect plant diseases fro
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/rishab-77/leafly.git
    cd leafly
    ```
 
-2. **Backend Setup**
+2. **Install Dependencies**
+   Open two terminals.
+   
+   **Terminal 1 (Backend):**
    ```bash
-   # Install Python dependencies
    pip install -r requirements.txt
-
-   # Start the API server
-   uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
    ```
-   The API will be available at `http://localhost:8000`
-
-3. **Frontend Setup**
+   
+   **Terminal 2 (Frontend):**
    ```bash
-   # Install Node dependencies
    cd frontend
    npm install
-
-   # Start the development server
-   npm run dev
    ```
-   The frontend will be available at `http://localhost:5173`
+
+3. **Run the Application (Automated)**
+   We have provided helper scripts to run both the FastAPI backend and the Vite frontend concurrently.
+   
+   **On Windows (PowerShell):**
+   ```powershell
+   .\start.ps1
+   ```
+   
+   **On Linux/Mac (Bash):**
+   ```bash
+   chmod +x start.sh
+   ./start.sh
+   ```
+
+   *The frontend will open at `http://localhost:5173` and the backend will run at `http://localhost:8000`.*
 
 ## 📖 Usage
 
-1. Open your browser and navigate to the frontend URL
-2. Upload a clear image of a plant leaf (JPG, PNG formats supported)
-3. Wait for the AI analysis to complete
-4. View the disease diagnosis and treatment recommendations
+1. Open your browser and navigate to `http://localhost:5173`.
+2. Go to the **Analyze** page.
+3. Drag and drop a clear, close-up image of a single leaf (Tomato, Potato, or Bell Pepper).
+4. Watch the scanning animation and receive your instant diagnosis and recommended action!
 
-## 🔧 API Documentation
+## 🔧 ML Pipeline
 
-### Endpoints
-
-#### POST `/predict`
-Upload an image for disease detection.
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: `file` (image file)
-
-**Response:**
-```json
-{
-  "prediction": "Leaf Blight",
-  "confidence": 0.92,
-  "treatment": "Apply copper-based fungicide...",
-  "prevention": "Ensure proper spacing between plants..."
-}
-```
-
-#### GET `/health`
-Check API health status.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "model_loaded": true
-}
-```
+1. **Preprocessing:** The user's image is stripped of its background using HSV masking, resized to 224x224, and enhanced using CLAHE on the LAB color space.
+2. **Feature Extraction:** Passed through the 11 million parameters of the EfficientNetB3 backbone.
+3. **Classification:** A custom classification head outputs Softmax probabilities across 15 distinct classes.
 
 ## 📁 Project Structure
 
 ```
 leafly/
-├── api/                    # FastAPI backend
-│   ├── main.py            # API entry point
-│   └── predict.py         # ML prediction logic
+├── api/                    # FastAPI backend logic & preprocessing
+│   ├── main.py            
+│   └── predict.py         
 ├── frontend/              # React frontend
 │   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page components
-│   │   └── data/          # Static data
-│   └── public/            # Static assets
-├── notebooks/             # Jupyter notebooks for training
-├── saved_models/          # Trained ML models
-├── requirements.txt       # Python dependencies
-└── README.md             # This file
+│   │   ├── components/    # Reusable UI (UploadSection, ResultCard)
+│   │   ├── pages/         # Core Pages (Home, Analyze, Plants, About)
+│   │   └── data/          # Hardcoded disease dictionary
+├── notebooks/             # Jupyter notebooks for model training
+├── saved_models/          # Trained PyTorch models (.pth)
+├── start.ps1              # Windows startup script
+├── start.sh               # Linux/Mac startup script
+└── README.md              
 ```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Plant disease dataset providers
-- PyTorch and Timm communities
-- FastAPI and React communities
-- Open source contributors
 
 ---
 
