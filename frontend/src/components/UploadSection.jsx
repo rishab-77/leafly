@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, ImageIcon, Loader2, AlertCircle } from 'lucide-react'
+import { Upload, ImageIcon, Loader2, AlertCircle, ScanLine } from 'lucide-react'
 
 export default function UploadSection({ onAnalyze, loading, preview, setPreview, error }) {
   const [file, setFile] = useState(null)
@@ -24,128 +24,153 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
   const handleReset = () => { setFile(null); setPreview(null) }
 
   return (
-    <section style={{ padding: '6rem 2rem', maxWidth: 860, margin: '0 auto' }}>
+    <section style={{ padding: '4rem 2rem', maxWidth: 600, margin: '0 auto' }}>
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.7 }}
       >
-        {/* Section header */}
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <p style={{
-            color: 'var(--lime)', fontSize: '0.8rem',
-            letterSpacing: '0.15em', textTransform: 'uppercase',
-            marginBottom: '0.8rem', fontWeight: 500
-          }}>
-            Instant Diagnosis
-          </p>
-          <h2 style={{
-            fontFamily: 'Cormorant Garamond, serif',
-            fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 300,
-            color: 'var(--ivory)'
-          }}>
-            Upload a leaf image
-          </h2>
-          <p style={{
-            color: 'rgba(245,240,232,0.45)', fontSize: '0.95rem',
-            marginTop: '1rem', maxWidth: 520, margin: '1rem auto 0', lineHeight: 1.7
-          }}>
-            Capture a clear single leaf and get a fast disease prediction with treatment guidance.
-          </p>
-        </div>
-
         {/* Dropzone */}
         <AnimatePresence mode="wait">
           {!preview ? (
             <motion.div
               key="dropzone"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
               {...getRootProps()}
               style={{
-                border: `2px dashed ${isDragActive ? 'var(--lime)' : 'rgba(168,255,62,0.18)'}`,
-                borderRadius: 'var(--radius)',
+                border: `2px dashed ${isDragActive ? '#a8ff3e' : 'rgba(255,255,255,0.2)'}`,
+                borderRadius: '24px',
                 padding: '4rem 2rem',
                 textAlign: 'center', cursor: 'pointer',
-                background: isDragActive ? 'rgba(168,255,62,0.07)' : 'var(--glass)',
-                transition: 'all 0.2s',
-                backdropFilter: 'blur(18px)',
-                boxShadow: 'var(--shadow-soft)',
+                background: isDragActive ? 'rgba(168,255,62,0.05)' : 'rgba(255,255,255,0.02)',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(10px)',
+                boxShadow: isDragActive ? '0 0 30px rgba(168,255,62,0.1)' : '0 10px 30px rgba(0,0,0,0.2)',
               }}
             >
               <input {...getInputProps()} />
               <motion.div
-                animate={{ scale: isDragActive ? 1.1 : 1 }}
+                animate={{ scale: isDragActive ? 1.1 : 1, rotate: isDragActive ? 5 : 0 }}
                 style={{
-                  width: 68, height: 68, borderRadius: '50%',
-                  background: 'rgba(168,255,62,0.15)',
+                  width: 80, height: 80, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 1.5rem'
+                  margin: '0 auto 1.5rem',
+                  boxShadow: 'inset 0 0 20px rgba(255,255,255,0.05)'
                 }}
               >
                 {isDragActive
-                  ? <ImageIcon size={32} color="var(--lime)" />
-                  : <Upload size={32} color="var(--lime)" />
+                  ? <ImageIcon size={32} color="#a8ff3e" />
+                  : <Upload size={32} color="rgba(245,240,232,0.8)" />
                 }
               </motion.div>
-              <p style={{ color: 'var(--ivory)', fontSize: '1rem', marginBottom: '0.5rem' }}>
-                {isDragActive ? 'Drop it here' : 'Drag & drop a leaf image'}
+              <p style={{ color: '#f5f0e8', fontSize: '1.2rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, marginBottom: '0.5rem' }}>
+                {isDragActive ? 'Drop image to scan' : 'Drag & drop a leaf image'}
               </p>
-              <p style={{ color: 'rgba(245,240,232,0.45)', fontSize: '0.9rem' }}>
-                or click to browse · JPG, PNG supported
+              <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.9rem', fontFamily: 'Inter, sans-serif' }}>
+                or click to browse your files (JPG, PNG)
               </p>
             </motion.div>
           ) : (
             <motion.div
               key="preview"
-              initial={{ opacity: 0, scale: 0.97 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               style={{
-                borderRadius: 'var(--radius)',
+                borderRadius: '24px',
                 overflow: 'hidden',
-                background: 'var(--glass)',
-                border: '1px solid var(--glass-border)',
-                backdropFilter: 'blur(18px)',
-                boxShadow: 'var(--shadow-soft)',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(168,255,62,0.3)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(168,255,62,0.1)',
+                position: 'relative'
               }}
             >
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', height: '350px' }}>
                 <img
                   src={preview} alt="Leaf preview"
                   style={{
-                    width: '100%', maxHeight: 420,
+                    width: '100%', height: '100%',
                     objectFit: 'cover', display: 'block'
                   }}
                 />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  background: 'linear-gradient(to top, rgba(10,26,15,0.92) 0%, transparent 55%)'
-                }} />
-                <button
-                  onClick={handleReset}
-                  style={{
-                    position: 'absolute', top: 16, right: 16,
-                    background: 'rgba(10,26,15,0.85)',
-                    border: '1px solid rgba(245,240,232,0.18)',
-                    color: 'var(--ivory)', borderRadius: '100px',
-                    padding: '0.45rem 1rem', fontSize: '0.85rem',
-                    cursor: 'pointer', fontFamily: 'DM Sans, sans-serif'
-                  }}
-                >
-                  Change
-                </button>
-              </div>
-              <div style={{ padding: '1.5rem', textAlign: 'center' }}>
-                <p style={{ color: 'rgba(245,240,232,0.55)', fontSize: '0.92rem', marginBottom: '0.25rem' }}>
-                  Ready to analyze
-                </p>
-                {file && (
-                  <p style={{ color: 'rgba(245,240,232,0.35)', fontSize: '0.82rem' }}>
-                    {file.name}
-                  </p>
+                
+                {/* --- Laser Scanning Animation (Visible when loading) --- */}
+                <AnimatePresence>
+                  {loading && (
+                    <motion.div
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+                    >
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,15,10,0.4)' }} />
+                      <motion.div
+                        animate={{ y: [0, 350, 0] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                        style={{
+                          width: '100%', height: '2px', background: '#a8ff3e',
+                          boxShadow: '0 0 15px 4px rgba(168,255,62,0.5)',
+                          position: 'absolute', top: 0, left: 0, zIndex: 2
+                        }}
+                      />
+                      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 3, color: '#a8ff3e', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                         <ScanLine size={48} />
+                         <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '1rem', letterSpacing: '0.1em', fontWeight: 600 }}>ANALYZING...</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {!loading && (
+                   <button
+                     onClick={handleReset}
+                     style={{
+                       position: 'absolute', top: 16, right: 16,
+                       background: 'rgba(10,15,10,0.6)', backdropFilter: 'blur(10px)',
+                       border: '1px solid rgba(255,255,255,0.2)',
+                       color: '#f5f0e8', borderRadius: '100px',
+                       padding: '0.5rem 1.2rem', fontSize: '0.85rem',
+                       cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                       transition: 'background 0.2s'
+                     }}
+                   >
+                     Change Image
+                   </button>
                 )}
               </div>
+              
+              {!loading && (
+                <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.85rem', marginBottom: '0.2rem', fontFamily: 'Inter, sans-serif' }}>
+                      Ready to analyze
+                    </p>
+                    {file && (
+                      <p style={{ color: '#f5f0e8', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+                        {file.name}
+                      </p>
+                    )}
+                  </div>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleAnalyze}
+                    style={{
+                      background: 'linear-gradient(135deg, #a8ff3e 0%, #8ae62e 100%)',
+                      color: '#0a0f0a', borderRadius: '100px', border: 'none',
+                      padding: '0.8rem 2rem', fontSize: '0.95rem',
+                      fontFamily: 'Inter, sans-serif', fontWeight: 600,
+                      cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                      boxShadow: '0 10px 20px rgba(168,255,62,0.2)'
+                    }}
+                  >
+                    Analyze <ScanLine size={16} />
+                  </motion.button>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -156,51 +181,18 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
             <motion.div
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               style={{
-                display: 'flex', alignItems: 'center', gap: '0.75rem',
-                background: 'rgba(255,77,77,0.1)',
-                border: '1px solid rgba(255,77,77,0.24)',
-                borderRadius: 18, padding: '1rem 1.25rem', marginTop: '1.25rem'
+                display: 'flex', alignItems: 'center', gap: '1rem',
+                background: 'rgba(255,77,77,0.05)', backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,77,77,0.3)',
+                borderRadius: '16px', padding: '1.2rem', marginTop: '1.5rem'
               }}
             >
-              <AlertCircle size={18} color="#ff4d4d" />
-              <p style={{ color: '#ff4d4d', fontSize: '0.95rem', lineHeight: 1.5 }}>{error}</p>
+              <AlertCircle size={24} color="#ff4d4d" style={{ flexShrink: 0 }} />
+              <p style={{ color: '#ff4d4d', fontSize: '0.95rem', lineHeight: 1.5, fontFamily: 'Inter, sans-serif', margin: 0 }}>{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Analyze button */}
-        <AnimatePresence>
-          {preview && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{ marginTop: '1.75rem', textAlign: 'center' }}
-            >
-              <motion.button
-                whileHover={{ scale: 1.03, boxShadow: '0 0 44px rgba(168,255,62,0.24)' }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleAnalyze}
-                disabled={loading}
-                style={{
-                  background: loading ? 'rgba(168,255,62,0.45)' : 'var(--lime)',
-                  color: 'var(--forest)', borderRadius: '100px',
-                  padding: '1rem 3rem', fontSize: '1rem',
-                  fontFamily: 'DM Sans, sans-serif', fontWeight: 500,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: '0.6rem',
-                  transition: 'background 0.2s'
-                }}
-              >
-                {loading && (
-                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                    <Loader2 size={18} />
-                  </motion.div>
-                )}
-                {loading ? 'Analyzing…' : 'Analyze Disease'}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </section>
   )
