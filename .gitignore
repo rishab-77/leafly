@@ -4,7 +4,6 @@ __pycache__/
 .DS_Store
 Icon
 Icon?
-*.pth
 PlantVillage/
 data/
 leafly_data.zip
