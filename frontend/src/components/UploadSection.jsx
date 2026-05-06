@@ -1,10 +1,19 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, ImageIcon, Loader2, AlertCircle, ScanLine } from 'lucide-react'
+import { Upload, ImageIcon, Loader2, AlertCircle, ScanLine, Camera } from 'lucide-react'
 
 export default function UploadSection({ onAnalyze, loading, preview, setPreview, error }) {
   const [file, setFile] = useState(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const cameraInputRef = useRef(null)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const onDrop = useCallback((accepted) => {
     if (!accepted.length) return
@@ -19,60 +28,112 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
     multiple: false
   })
 
+  const handleCameraCapture = (e) => {
+    const f = e.target.files[0]
+    if (f) {
+      setFile(f)
+      setPreview(URL.createObjectURL(f))
+    }
+  }
+
+  const triggerCamera = (e) => {
+    e.stopPropagation()
+    cameraInputRef.current?.click()
+  }
+
   const handleAnalyze = () => file && onAnalyze(file)
 
   const handleReset = () => { setFile(null); setPreview(null) }
 
   return (
-    <section style={{ padding: '4rem 2rem', maxWidth: 600, margin: '0 auto' }}>
+    <section style={{ padding: '2rem 2rem 4rem', maxWidth: 600, margin: '0 auto' }}>
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.7 }}
       >
+        {/* Hidden Camera Input */}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          ref={cameraInputRef}
+          onChange={handleCameraCapture}
+          style={{ display: 'none' }}
+        />
+
         {/* Dropzone */}
         <AnimatePresence mode="wait">
           {!preview ? (
-            <motion.div
-              key="dropzone"
-              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              {...getRootProps()}
-              style={{
-                border: `2px dashed ${isDragActive ? '#a8ff3e' : 'rgba(255,255,255,0.2)'}`,
-                borderRadius: '24px',
-                padding: '4rem 2rem',
-                textAlign: 'center', cursor: 'pointer',
-                background: isDragActive ? 'rgba(168,255,62,0.05)' : 'rgba(255,255,255,0.02)',
-                transition: 'all 0.3s ease',
-                backdropFilter: 'blur(10px)',
-                boxShadow: isDragActive ? '0 0 30px rgba(168,255,62,0.1)' : '0 10px 30px rgba(0,0,0,0.2)',
-              }}
-            >
-              <input {...getInputProps()} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <motion.div
-                animate={{ scale: isDragActive ? 1.1 : 1, rotate: isDragActive ? 5 : 0 }}
+                key="dropzone"
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+                {...getRootProps()}
                 style={{
-                  width: 80, height: 80, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 1.5rem',
-                  boxShadow: 'inset 0 0 20px rgba(255,255,255,0.05)'
+                  border: `2px dashed ${isDragActive ? '#a8ff3e' : 'rgba(255,255,255,0.2)'}`,
+                  borderRadius: '24px',
+                  padding: '4rem 2rem',
+                  textAlign: 'center', cursor: 'pointer',
+                  background: isDragActive ? 'rgba(168,255,62,0.05)' : 'rgba(255,255,255,0.02)',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: isDragActive ? '0 0 30px rgba(168,255,62,0.1)' : '0 10px 30px rgba(0,0,0,0.2)',
                 }}
               >
-                {isDragActive
-                  ? <ImageIcon size={32} color="#a8ff3e" />
-                  : <Upload size={32} color="rgba(245,240,232,0.8)" />
-                }
+                <input {...getInputProps()} />
+                <motion.div
+                  animate={{ scale: isDragActive ? 1.1 : 1, rotate: isDragActive ? 5 : 0 }}
+                  style={{
+                    width: 80, height: 80, borderRadius: '50%',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 1.5rem',
+                    boxShadow: 'inset 0 0 20px rgba(255,255,255,0.05)'
+                  }}
+                >
+                  {isDragActive
+                    ? <ImageIcon size={32} color="#a8ff3e" />
+                    : <Upload size={32} color="rgba(245,240,232,0.8)" />
+                  }
+                </motion.div>
+                <p style={{ color: '#f5f0e8', fontSize: '1.2rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, marginBottom: '0.5rem' }}>
+                  {isDragActive ? 'Drop image to scan' : 'Drag & drop a leaf image'}
+                </p>
+                <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.9rem', fontFamily: 'Inter, sans-serif' }}>
+                  or click to browse your files
+                </p>
               </motion.div>
-              <p style={{ color: '#f5f0e8', fontSize: '1.2rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, marginBottom: '0.5rem' }}>
-                {isDragActive ? 'Drop image to scan' : 'Drag & drop a leaf image'}
-              </p>
-              <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.9rem', fontFamily: 'Inter, sans-serif' }}>
-                or click to browse your files (JPG, PNG)
-              </p>
-            </motion.div>
+
+              {isMobile && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: 'rgba(255,255,255,0.2)' }}>
+                    <div style={{ height: '1px', background: 'currentColor', flex: 1 }} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>OR</span>
+                    <div style={{ height: '1px', background: 'currentColor', flex: 1 }} />
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02, background: 'rgba(168,255,62,0.1)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={triggerCamera}
+                    style={{
+                      width: '100%', padding: '1.2rem', borderRadius: '16px',
+                      background: 'rgba(255,255,255,0.03)', border: '1px solid #a8ff3e40',
+                      color: '#a8ff3e', fontSize: '1rem', fontWeight: 600,
+                      fontFamily: 'Inter, sans-serif', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+                      backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                    <Camera size={20} />
+                    Snap a Photo
+                  </motion.button>
+                </>
+              )}
+            </div>
           ) : (
             <motion.div
               key="preview"
@@ -148,8 +209,8 @@ export default function UploadSection({ onAnalyze, loading, preview, setPreview,
                       Ready to analyze
                     </p>
                     {file && (
-                      <p style={{ color: '#f5f0e8', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
-                        {file.name}
+                      <p style={{ color: '#f5f0e8', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px' }}>
+                        {file.name || 'Captured Image'}
                       </p>
                     )}
                   </div>

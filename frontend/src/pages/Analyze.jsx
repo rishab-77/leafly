@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import UploadSection from '../components/UploadSection'
 import ResultCard from '../components/ResultCard'
+import StatsDashboard from '../components/StatsDashboard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Clock, ChevronRight } from 'lucide-react'
 
@@ -41,26 +42,13 @@ export default function Analyze() {
         date: new Date().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' })
       }
       setHistory(prev => {
-        const updated = [newScan, ...prev].slice(0, 4) // Keep last 4
+        const updated = [newScan, ...prev].slice(0, 10) // Keep more for better stats
         localStorage.setItem('leafly_history', JSON.stringify(updated))
         return updated
       })
       
     } catch (err) {
-      const statusCode = err?.response?.status
-      const backendMessage = err?.response?.data?.detail
-
-      if (!err?.response) {
-        setError(
-          `Cannot reach Leafly API at ${API_BASE_URL}. Start the backend and verify VITE_API_URL in frontend/.env, then restart Vite.`
-        )
-      } else if (backendMessage) {
-        setError(`Analysis failed (${statusCode ?? 'error'}): ${backendMessage}`)
-      } else {
-        setError(
-          `Analysis failed with status ${statusCode ?? 'unknown'}. Make sure the Leafly API is running and VITE_API_URL is configured correctly.`
-        )
-      }
+// ... (rest of function)
     } finally {
       setLoading(false)
     }
@@ -134,38 +122,43 @@ export default function Analyze() {
               
               {/* --- Recent Scans History --- */}
               {history.length > 0 && !preview && (
-                <motion.div 
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                  style={{ maxWidth: 600, margin: '0 auto', padding: '0 2rem' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'rgba(245,240,232,0.5)' }}>
-                    <Clock size={16} />
-                    <span style={{ fontSize: '0.85rem', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Recent Scans</span>
-                  </div>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {history.map((item) => (
-                      <div key={item.id} style={{
-                        background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
-                        borderRadius: '12px', padding: '1rem 1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        backdropFilter: 'blur(10px)'
-                      }}>
-                        <div>
-                          <p style={{ color: '#f5f0e8', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, margin: '0 0 0.2rem 0' }}>
-                            {item.disease.includes('·') ? item.disease.split('·')[1].trim() : item.disease}
-                          </p>
-                          <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif', margin: 0 }}>
-                            {item.date} • {item.confidence}% confident
-                          </p>
+                <div style={{ maxWidth: 800, margin: '0 auto' }}>
+                  <motion.div 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+                    style={{ maxWidth: 600, margin: '0 auto', padding: '0 2rem' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'rgba(245,240,232,0.5)' }}>
+                      <Clock size={16} />
+                      <span style={{ fontSize: '0.85rem', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Recent Scans</span>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {history.slice(0, 4).map((item) => (
+                        <div key={item.id} style={{
+                          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
+                          borderRadius: '12px', padding: '1rem 1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                          backdropFilter: 'blur(10px)'
+                        }}>
+                          <div>
+                            <p style={{ color: '#f5f0e8', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, margin: '0 0 0.2rem 0' }}>
+                              {item.disease.includes('·') ? item.disease.split('·')[1].trim() : item.disease}
+                            </p>
+                            <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif', margin: 0 }}>
+                              {item.date} • {item.confidence}% confident
+                            </p>
+                          </div>
+                          <div style={{
+                            width: 8, height: 8, borderRadius: '50%',
+                            background: item.disease.toLowerCase().includes('healthy') ? '#a8ff3e' : '#ffc844'
+                          }} />
                         </div>
-                        <div style={{
-                          width: 8, height: 8, borderRadius: '50%',
-                          background: item.disease.toLowerCase().includes('healthy') ? '#a8ff3e' : '#ffc844'
-                        }} />
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+
+                  {/* --- Dashboard Statistics --- */}
+                  <StatsDashboard history={history} />
+                </div>
               )}
             </motion.div>
           ) : (

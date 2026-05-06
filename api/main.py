@@ -66,7 +66,7 @@ async def predict(file: UploadFile = File(...)):
 
     # Run prediction
     try:
-        disease, confidence = predict_image(image_bytes, model, class_names)
+        disease, confidence, breakdown = predict_image(image_bytes, model, class_names)
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -76,5 +76,6 @@ async def predict(file: UploadFile = File(...)):
     return {
         "disease":    disease,
         "confidence": confidence,
+        "breakdown":  breakdown,
         "unit":       "%"
     }

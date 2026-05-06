@@ -1,244 +1,245 @@
 import { motion } from 'framer-motion'
-import { CheckCircle, AlertTriangle, XCircle, RefreshCw, Download } from 'lucide-react'
-import { diseaseInfo } from '../data/diseases'
-import { useState, useEffect } from 'react'
-import { jsPDF } from 'jspdf'
+import { 
+  Download, Share2, AlertTriangle, ShieldCheck, 
+  Sprout, Info, BarChart3, PieChart as PieIcon 
+} from 'lucide-react'
+import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { DISEASES } from '../data/diseases'
 
-const severityConfig = {
-  healthy:  { color: '#a8ff3e', icon: CheckCircle,     label: 'Healthy' },
-  moderate: { color: '#ffc844', icon: AlertTriangle,   label: 'Moderate Risk' },
-  severe:   { color: '#ff4d4d', icon: XCircle,         label: 'Severe Risk' },
-}
+const COLORS = ['#a8ff3e', '#8ae62e', '#ffc844', '#ff4d4d', '#00d1ff', '#9d50bb']
 
 export default function ResultCard({ result, preview, onReset }) {
-  const info = diseaseInfo[result.disease] || {
-    display: result.disease,
-    severity: 'moderate',
-    emoji: '🌿',
-    description: 'Disease detected in leaf sample.',
-    treatment: 'Consult an agricultural specialist.'
+  const diseaseInfo = DISEASES[result.disease] || {
+    name: result.disease,
+    description: 'Unknown plant condition detected. Please consult an expert.',
+    treatment: 'No specific treatment available in our database.',
+    severity: 'Unknown'
   }
 
-  const sev = severityConfig[info.severity]
-  const Icon = sev.icon
-  
-  const [isMobile, setIsMobile] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
+  // Prepare data for the Pie Chart (Top 5 predictions)
+  const chartData = result.breakdown?.slice(0, 5).map(item => ({
+    name: item.name,
+    value: item.value
+  })) || []
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768)
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+  // Remaining percentage for "Others"
+  const topSum = chartData.reduce((acc, curr) => acc + curr.value, 0)
+  if (topSum < 99.9 && result.breakdown?.length > 5) {
+    chartData.push({ name: 'Other', value: Math.max(0, Math.round((100 - topSum) * 10) / 10) })
+  }
 
   const handleDownloadPDF = async () => {
-    const element = document.getElementById('result-bento-box')
-    if (!element) return
+    const element = document.getElementById('diagnosis-report')
+    const canvas = await html2canvas(element, {
+      backgroundColor: '#0a0f0a',
+      scale: 2,
+    })
     
-    setIsDownloading(true)
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const imgProps = pdf.getImageProperties(imgData)
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+    pdf.save(`leafly-report-${Date.now()}.pdf`)
+  }
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Leafly Diagnosis',
+      text: `Leafly detected ${diseaseInfo.name} with ${result.confidence}% confidence. Treatment: ${diseaseInfo.treatment}`,
+      url: window.location.href
+    }
+
     try {
-      const canvas = await html2canvas(element, { 
-        scale: 2, 
-        useCORS: true, 
-        backgroundColor: '#0a0f0a' // Match app background to avoid transparent issues
-      })
-      
-      const imgData = canvas.toDataURL('image/png')
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-      
-      // Add a header
-      pdf.setFontSize(22)
-      pdf.setTextColor(40, 40, 40)
-      pdf.text('Leafly | Diagnosis Report', 15, 20)
-      
-      pdf.setFontSize(10)
-      pdf.setTextColor(100, 100, 100)
-      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, 28)
-      
-      // Add the captured bento box image
-      pdf.addImage(imgData, 'PNG', 0, 40, pdfWidth, pdfHeight)
-      
-      pdf.save(`Leafly_Diagnosis_${result.disease}.pdf`)
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(shareData.text)
+        alert('Diagnosis copied to clipboard!')
+      }
     } catch (err) {
-      console.error('Failed to generate PDF', err)
-      alert('Failed to generate PDF. Please try again.')
-    } finally {
-      setIsDownloading(false)
+      console.error('Error sharing:', err)
     }
   }
 
   return (
-    <motion.section
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-      style={{ padding: '2rem 2rem 6rem', maxWidth: 900, margin: '0 auto' }}
-    >
-      {/* Result Bento Box */}
-      <div id="result-bento-box" style={{
+    <div style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
+      <div id="diagnosis-report" style={{ 
         background: 'rgba(255,255,255,0.02)',
-        border: `1px solid ${sev.color}40`,
-        borderRadius: '24px',
-        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        borderRadius: '32px',
+        border: '1px solid rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(20px)',
         overflow: 'hidden',
-        boxShadow: `0 20px 50px rgba(0,0,0,0.3), inset 0 0 0 1px ${sev.color}15`,
-        display: 'flex', flexDirection: isMobile ? 'column' : 'row',
-        position: 'relative'
+        boxShadow: '0 40px 100px rgba(0,0,0,0.5)',
+        padding: '2rem'
       }}>
-         {/* Subtle Severity Radial Glow */}
-         <div style={{
-           position: 'absolute', top: '-10%', left: '-10%', width: '50%', height: '50%',
-           background: `radial-gradient(circle, ${sev.color}15 0%, transparent 70%)`,
-           pointerEvents: 'none', zIndex: 0
-         }}/>
-
-        {/* Left — Image */}
-        <div style={{ position: 'relative', width: isMobile ? '100%' : '40%', minHeight: 300, zIndex: 1 }}>
-          <img src={preview} alt="Analyzed leaf"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-          {/* Gradient fade to blend into the card */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: isMobile 
-              ? 'linear-gradient(to top, rgba(10,15,10,1) 0%, transparent 40%)' 
-              : 'linear-gradient(to right, transparent 0%, rgba(10,15,10,1) 90%, rgba(10,15,10,1) 100%)'
-          }} />
+        {/* --- Header / Bento Layout --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
           
-          {/* Badge Overlay */}
-          <div style={{ position: 'absolute', top: 20, left: 20, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(10,15,10,0.6)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '100px', border: `1px solid ${sev.color}40` }}>
-            <Icon size={16} color={sev.color} />
-            <span style={{ color: '#f5f0e8', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif', fontWeight: 500 }}>
-              Analysis Complete
-            </span>
+          {/* Left: Image Preview */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+            style={{ borderRadius: '20px', overflow: 'hidden', height: '100%', minHeight: 300, position: 'relative' }}
+          >
+            <img src={preview} alt="Scanned leaf" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ 
+              position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1.5rem',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)'
+            }}>
+              <p style={{ color: '#a8ff3e', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: '0.2rem' }}>Condition Found</p>
+              <h2 style={{ color: '#f5f0e8', fontSize: '1.8rem', fontFamily: 'Cormorant Garamond, serif', margin: 0 }}>{diseaseInfo.name}</h2>
+            </div>
+          </motion.div>
+
+          {/* Right: Confidence & Details */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* Confidence Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              style={{ background: 'rgba(168,255,62,0.05)', borderRadius: '24px', padding: '1.5rem', border: '1px solid rgba(168,255,62,0.1)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <span style={{ color: 'rgba(245,240,232,0.6)', fontSize: '0.9rem', fontWeight: 500 }}>AI Confidence</span>
+                <ShieldCheck size={20} color="#a8ff3e" />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                <span style={{ fontSize: '3rem', fontWeight: 300, color: '#a8ff3e', fontFamily: 'Cormorant Garamond, serif' }}>{result.confidence}</span>
+                <span style={{ fontSize: '1.2rem', color: '#a8ff3e', opacity: 0.6 }}>%</span>
+              </div>
+              <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginTop: '1rem', overflow: 'hidden' }}>
+                <motion.div 
+                  initial={{ width: 0 }} animate={{ width: `${result.confidence}%` }}
+                  style={{ height: '100%', background: '#a8ff3e', boxShadow: '0 0 10px rgba(168,255,62,0.5)' }} 
+                />
+              </div>
+            </motion.div>
+
+            {/* Severity Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '24px', padding: '1.5rem' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#f5f0e8' }}>
+                <AlertTriangle size={18} color={diseaseInfo.severity === 'Critical' ? '#ff4d4d' : '#ffc844'} />
+                <span style={{ fontWeight: 600 }}>Severity: {diseaseInfo.severity}</span>
+              </div>
+            </motion.div>
           </div>
         </div>
 
-        {/* Right — Result Details */}
-        <div style={{ padding: '2.5rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 1, background: 'rgba(10,15,10,0.4)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <div style={{ fontSize: '2.5rem', background: 'rgba(255,255,255,0.05)', width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              {info.emoji}
-            </div>
-            <div>
-               <h2 style={{
-                 fontFamily: 'Cormorant Garamond, serif',
-                 fontSize: '2rem', fontWeight: 400,
-                 color: '#f5f0e8', margin: 0, lineHeight: 1.1
-               }}>
-                 {info.display.split('·')[1]?.trim() || info.display}
-               </h2>
-               <div style={{ color: 'rgba(245,240,232,0.5)', fontFamily: 'Inter, sans-serif', fontSize: '0.85rem', marginTop: '0.3rem' }}>
-                  {info.display.includes('·') ? info.display.split('·')[0].trim() : ''}
-               </div>
-            </div>
+        {/* --- Analysis Breakdown (Pie Chart) --- */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          style={{ 
+            marginTop: '2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', 
+            padding: '2rem', border: '1px solid rgba(255,255,255,0.05)' 
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', color: 'rgba(245,240,232,0.6)' }}>
+            <PieIcon size={18} />
+            <span style={{ fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Probability Breakdown</span>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-            <span style={{
-              color: sev.color, background: `${sev.color}15`, border: `1px solid ${sev.color}30`,
-              padding: '0.4rem 1rem', borderRadius: '100px',
-              fontSize: '0.8rem', fontWeight: 600, fontFamily: 'Inter, sans-serif'
-            }}>
-              {sev.label}
-            </span>
-            <span style={{
-              color: 'rgba(245,240,232,0.6)', fontSize: '0.85rem',
-              fontFamily: 'Inter, sans-serif'
-            }}>
-              <strong style={{ color: '#f5f0e8' }}>{result.confidence}%</strong> confident
-            </span>
-          </div>
-
-          {/* Description */}
-          <div style={{ marginBottom: '2rem' }}>
-            <p style={{
-              fontSize: '1rem', color: 'rgba(245,240,232,0.7)',
-              lineHeight: 1.6, fontFamily: 'Inter, sans-serif', marginBottom: '1.5rem'
-            }}>
-              {info.description}
-            </p>
-            <div style={{
-              height: 6, background: 'rgba(255,255,255,0.05)',
-              borderRadius: 999, overflow: 'hidden'
-            }}>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${result.confidence}%` }}
-                transition={{ duration: 1.2, ease: 'easeOut', delay: 0.2 }}
-                style={{
-                  height: '100%', borderRadius: 999,
-                  background: `linear-gradient(90deg, ${sev.color}40, ${sev.color})`,
-                  boxShadow: `0 0 10px ${sev.color}80`
-                }}
-              />
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', alignItems: 'center' }}>
+            <div style={{ height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%" cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    animationDuration={1500}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ background: '#0a0f0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                    itemStyle={{ color: '#f5f0e8' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {chartData.map((item, i) => (
+                <div key={item.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: COLORS[i % COLORS.length] }} />
+                    <span style={{ color: 'rgba(245,240,232,0.7)', fontSize: '0.9rem' }}>{item.name}</span>
+                  </div>
+                  <span style={{ color: '#f5f0e8', fontWeight: 600, fontSize: '0.9rem' }}>{item.value}%</span>
+                </div>
+              ))}
             </div>
           </div>
+        </motion.div>
 
-          {/* Treatment Bento Box */}
-          <div style={{
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.05)',
-            borderRadius: '16px', padding: '1.5rem'
-          }}>
-            <p style={{
-              fontSize: '0.75rem', color: 'rgba(245,240,232,0.5)',
-              letterSpacing: '0.15em', textTransform: 'uppercase',
-              marginBottom: '0.5rem', fontFamily: 'Inter, sans-serif', fontWeight: 600
-            }}>
-              Recommended Action
-            </p>
-            <p style={{ fontSize: '0.95rem', color: '#f5f0e8', lineHeight: 1.6, fontFamily: 'Inter, sans-serif', margin: 0 }}>
-              {info.treatment}
-            </p>
-          </div>
+        {/* --- Treatment & Description --- */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '24px', padding: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', color: '#a8ff3e' }}>
+              <Info size={20} />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontFamily: 'Cormorant Garamond, serif' }}>Description</h3>
+            </div>
+            <p style={{ color: 'rgba(245,240,232,0.7)', lineHeight: 1.6, margin: 0 }}>{diseaseInfo.description}</p>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+            style={{ background: 'rgba(168,255,62,0.03)', borderRadius: '24px', padding: '2rem', border: '1px solid rgba(168,255,62,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', color: '#a8ff3e' }}>
+              <Sprout size={20} />
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontFamily: 'Cormorant Garamond, serif' }}>Treatment Plan</h3>
+            </div>
+            <p style={{ color: 'rgba(245,240,232,0.7)', lineHeight: 1.6, margin: 0 }}>{diseaseInfo.treatment}</p>
+          </motion.div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '3rem', flexWrap: 'wrap' }}>
+      {/* --- Action Buttons --- */}
+      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', justifyContent: 'center' }}>
         <motion.button
-          whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.05)' }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           onClick={onReset}
-          style={{
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#f5f0e8',
-            borderRadius: '100px', padding: '0.9rem 2.5rem',
-            fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500,
-            cursor: 'pointer', display: 'inline-flex',
-            alignItems: 'center', gap: '0.6rem',
+          style={{ 
+            padding: '1rem 2rem', borderRadius: '100px', border: '1px solid rgba(255,255,255,0.1)',
+            background: 'transparent', color: '#f5f0e8', cursor: 'pointer', fontWeight: 600
           }}
         >
-          <RefreshCw size={16} />
-          Analyze Another Plant
+          Scan Another
         </motion.button>
-        
         <motion.button
-          whileHover={{ scale: 1.05, boxShadow: `0 0 20px ${sev.color}40` }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           onClick={handleDownloadPDF}
-          disabled={isDownloading}
-          style={{
-            background: sev.color,
-            border: 'none',
-            color: '#0a0f0a',
-            borderRadius: '100px', padding: '0.9rem 2.5rem',
-            fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 600,
-            cursor: isDownloading ? 'wait' : 'pointer', display: 'inline-flex',
-            alignItems: 'center', gap: '0.6rem',
-            opacity: isDownloading ? 0.7 : 1
+          style={{ 
+            padding: '1rem 2rem', borderRadius: '100px', border: 'none',
+            background: '#a8ff3e', color: '#0a0f0a', cursor: 'pointer', fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: '0.5rem'
           }}
         >
-          <Download size={16} />
-          {isDownloading ? 'Generating...' : 'Download PDF Report'}
+          <Download size={18} /> Download PDF
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          onClick={handleShare}
+          style={{ 
+            padding: '1rem 2rem', borderRadius: '100px', border: '1px solid #a8ff3e30',
+            background: 'rgba(168,255,62,0.1)', color: '#a8ff3e', cursor: 'pointer', fontWeight: 600,
+            display: 'flex', alignItems: 'center', gap: '0.5rem'
+          }}
+        >
+          <Share2 size={18} /> Share Results
         </motion.button>
       </div>
-    </motion.section>
+    </div>
   )
 }

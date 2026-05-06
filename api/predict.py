@@ -49,7 +49,7 @@ def load_model():
 
 
 def predict_image(image_bytes: bytes, model, class_names):
-    """Run inference on image bytes."""
+    """Run inference on image bytes and return full breakdown."""
     # Open image
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
@@ -59,10 +59,25 @@ def predict_image(image_bytes: bytes, model, class_names):
     # Inference
     with torch.no_grad():
         outputs = model(tensor)
-        probabilities = torch.softmax(outputs, dim=1)
-        confidence, predicted_idx = probabilities.max(1)
+        probabilities = torch.softmax(outputs, dim=1)[0]
+        confidence, predicted_idx = probabilities.max(0)
 
     disease    = class_names[predicted_idx.item()]
-    confidence = round(confidence.item() * 100, 2)
+    top_confidence = round(confidence.item() * 100, 2)
 
-    return disease, confidence
+    # Full breakdown for the Pie Chart
+    breakdown = []
+    for i, prob in enumerate(probabilities):
+        name = class_names[i]
+        # Clean up the name if it contains the dot (e.g., "Tomato · Healthy")
+        clean_name = name.split('·')[-1].strip() if '·' in name else name
+        breakdown.append({
+            "name": clean_name,
+            "full_name": name,
+            "value": round(prob.item() * 100, 2)
+        })
+
+    # Sort breakdown by value descending
+    breakdown.sort(key=lambda x: x["value"], reverse=True)
+
+    return disease, top_confidence, breakdown
