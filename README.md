@@ -54,8 +54,7 @@ A modern web application that uses machine learning to detect plant diseases fro
    pip install -r requirements.txt
 
    # Start the API server
-   cd api
-   python main.py
+   uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
    ```
    The API will be available at `http://localhost:8000`
 
