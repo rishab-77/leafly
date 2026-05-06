@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion'
-import { CheckCircle, AlertTriangle, XCircle, RefreshCw } from 'lucide-react'
+import { CheckCircle, AlertTriangle, XCircle, RefreshCw, Download } from 'lucide-react'
 import { diseaseInfo } from '../data/diseases'
 import { useState, useEffect } from 'react'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
 
 const severityConfig = {
   healthy:  { color: '#a8ff3e', icon: CheckCircle,     label: 'Healthy' },
@@ -22,12 +24,52 @@ export default function ResultCard({ result, preview, onReset }) {
   const Icon = sev.icon
   
   const [isMobile, setIsMobile] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
     handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById('result-bento-box')
+    if (!element) return
+    
+    setIsDownloading(true)
+    try {
+      const canvas = await html2canvas(element, { 
+        scale: 2, 
+        useCORS: true, 
+        backgroundColor: '#0a0f0a' // Match app background to avoid transparent issues
+      })
+      
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      
+      // Add a header
+      pdf.setFontSize(22)
+      pdf.setTextColor(40, 40, 40)
+      pdf.text('Leafly | Diagnosis Report', 15, 20)
+      
+      pdf.setFontSize(10)
+      pdf.setTextColor(100, 100, 100)
+      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, 28)
+      
+      // Add the captured bento box image
+      pdf.addImage(imgData, 'PNG', 0, 40, pdfWidth, pdfHeight)
+      
+      pdf.save(`Leafly_Diagnosis_${result.disease}.pdf`)
+    } catch (err) {
+      console.error('Failed to generate PDF', err)
+      alert('Failed to generate PDF. Please try again.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <motion.section
@@ -37,7 +79,7 @@ export default function ResultCard({ result, preview, onReset }) {
       style={{ padding: '2rem 2rem 6rem', maxWidth: 900, margin: '0 auto' }}
     >
       {/* Result Bento Box */}
-      <div style={{
+      <div id="result-bento-box" style={{
         background: 'rgba(255,255,255,0.02)',
         border: `1px solid ${sev.color}40`,
         borderRadius: '24px',
@@ -157,8 +199,8 @@ export default function ResultCard({ result, preview, onReset }) {
         </div>
       </div>
 
-      {/* Try another */}
-      <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+      {/* Actions */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '3rem', flexWrap: 'wrap' }}>
         <motion.button
           whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.05)' }}
           whileTap={{ scale: 0.95 }}
@@ -175,6 +217,26 @@ export default function ResultCard({ result, preview, onReset }) {
         >
           <RefreshCw size={16} />
           Analyze Another Plant
+        </motion.button>
+        
+        <motion.button
+          whileHover={{ scale: 1.05, boxShadow: `0 0 20px ${sev.color}40` }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleDownloadPDF}
+          disabled={isDownloading}
+          style={{
+            background: sev.color,
+            border: 'none',
+            color: '#0a0f0a',
+            borderRadius: '100px', padding: '0.9rem 2.5rem',
+            fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 600,
+            cursor: isDownloading ? 'wait' : 'pointer', display: 'inline-flex',
+            alignItems: 'center', gap: '0.6rem',
+            opacity: isDownloading ? 0.7 : 1
+          }}
+        >
+          <Download size={16} />
+          {isDownloading ? 'Generating...' : 'Download PDF Report'}
         </motion.button>
       </div>
     </motion.section>
