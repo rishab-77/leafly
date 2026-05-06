@@ -110,7 +110,7 @@ export default function HowItWorks() {
           {[
             { value: 'EfficientNetB3', label: 'Architecture' },
             { value: '11M',            label: 'Parameters' },
-            { value: '91.8%',          label: 'Test Accuracy' },
+            { value: '98.84%',          label: 'Test Accuracy' },
             { value: '224×224',        label: 'Input Size' },
           ].map(stat => (
             <div key={stat.label} style={{

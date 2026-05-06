@@ -43,7 +43,7 @@ export default function About() {
           }}>
             Leafly is an AI-powered plant disease detection system built as part of an
             undergraduate final year project. It uses deep learning and transfer learning
-            to classify plant diseases from leaf photographs with 91.8% test accuracy.
+            to classify plant diseases from leaf photographs with 98.84% test accuracy.
           </p>
         </motion.div>
 
@@ -65,7 +65,7 @@ export default function About() {
             {[
               { value: '92.4%', label: 'Phase 1 Val Acc', sub: 'Head training only' },
               { value: '99.5%', label: 'Phase 2 Val Acc', sub: 'After fine-tuning' },
-              { value: '91.8%', label: 'Test Accuracy',   sub: 'Truly unseen data' },
+              { value: '98.84%', label: 'Test Accuracy',   sub: 'Truly unseen data' },
             ].map(stat => (
               <div key={stat.label} style={{
                 background: 'var(--glass)',

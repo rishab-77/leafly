@@ -140,7 +140,7 @@ export default function Hero({ onCTAClick }) {
         }}
       >
         {[
-          { value: '91.8%', label: 'Test Accuracy' },
+          { value: '98.84%', label: 'Test Accuracy' },
           { value: '20K+', label: 'Training Images' },
           { value: '15', label: 'Disease Classes' },
         ].map(stat => (

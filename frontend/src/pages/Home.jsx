@@ -1,4 +1,4 @@
-﻿import { motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { ArrowDown, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -132,7 +132,7 @@ export default function Home() {
         style={{ display: 'flex', gap: '4rem', marginTop: '5rem', flexWrap: 'wrap', justifyContent: 'center' }}
       >
         {[
-          { value: '91.8%', label: 'Test Accuracy' },
+          { value: '98.84%', label: 'Test Accuracy' },
           { value: '20K+',  label: 'Training Images' },
           { value: '15',    label: 'Disease Classes' },
         ].map(stat => (

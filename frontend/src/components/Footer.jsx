@@ -42,7 +42,7 @@ export default function Footer() {
         </div>
 
         <p style={{ fontSize: '0.75rem', color: 'rgba(245,240,232,0.2)' }}>
-          EfficientNetB3 · PlantVillage · 91.8% Accuracy
+          EfficientNetB3 · PlantVillage · 98.84% Accuracy
         </p>
       </div>
     </footer>
