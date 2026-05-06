@@ -5,7 +5,7 @@ import timm
 import json
 import io
 from pathlib import Path
-from preprocessing import get_inference_transforms
+from api.preprocessing import get_inference_transforms
 
 # Paths
 BASE_DIR        = Path(__file__).parent.parent
@@ -44,7 +44,7 @@ def load_model():
     )
     model.eval()
 
-    print(f"✅ Model loaded | {num_classes} classes | Device: {DEVICE}")
+    print(f"[Leafly] Model loaded | {num_classes} classes | Device: {DEVICE}")
     return model, class_names
 
 

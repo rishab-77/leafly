@@ -12,10 +12,10 @@ class_names = None
 async def lifespan(app: FastAPI):
     """Load model once when API starts."""
     global model, class_names
-    print("🌱 Starting Leafly API...")
+    print("[Leafly] Starting API...")
     model, class_names = load_model()
     yield
-    print("🛑 Shutting down Leafly API...")
+    print("[Leafly] Shutting down API...")
 
 
 # Create app
