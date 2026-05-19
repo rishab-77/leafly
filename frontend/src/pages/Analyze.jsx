@@ -4,12 +4,32 @@ import UploadSection from '../components/UploadSection'
 import ResultCard from '../components/ResultCard'
 import StatsDashboard from '../components/StatsDashboard'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Clock, ChevronRight } from 'lucide-react'
+import { Clock, ChevronRight, ScanLine } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { db } from '../firebase'
 import { collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+
+const compressImage = (file, maxWidth = 400) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const scale = Math.min(maxWidth / img.width, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.6));
+      };
+    };
+  });
+};
 
 export default function Analyze() {
   const [result, setResult]   = useState(null)
@@ -27,15 +47,18 @@ export default function Analyze() {
         try {
           const q = query(
             collection(db, 'scans'), 
-            where('userId', '==', currentUser.uid), 
-            orderBy('timestamp', 'desc'), 
-            limit(10)
+            where('userId', '==', currentUser.uid)
           );
           const querySnapshot = await getDocs(q);
           const historyData = querySnapshot.docs.map(doc => doc.data());
-          setHistory(historyData);
+          
+          // Sort by timestamp or id descending (newest first)
+          historyData.sort((a, b) => b.id - a.id);
+          
+          setHistory(historyData.slice(0, 10));
         } catch(err) {
           console.error("Error fetching history:", err)
+          setError("Failed to load history from Firebase: " + err.message)
         }
       };
       fetchHistory();
@@ -54,6 +77,8 @@ export default function Analyze() {
     formData.append('file', file)
 
     try {
+      const thumbnailBase64 = await compressImage(file, 400);
+
       const res = await axios.post(`${API_BASE_URL}/predict`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
@@ -64,6 +89,8 @@ export default function Analyze() {
         id: Date.now(),
         disease: res.data.disease,
         confidence: res.data.confidence,
+        breakdown: res.data.breakdown || null,
+        thumbnail: thumbnailBase64,
         date: new Date().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' })
       }
       
@@ -77,6 +104,7 @@ export default function Analyze() {
           setHistory(prev => [newScan, ...prev].slice(0, 10));
         } catch(e) {
           console.error("Error adding to Firestore: ", e);
+          throw new Error("Firebase save failed: " + e.message);
         }
       } else {
         setHistory(prev => {
@@ -85,8 +113,15 @@ export default function Analyze() {
           return updated
         })
       }
+
+      setResult(res.data)
       
     } catch (err) {
+      if (err.message && err.message.startsWith("Firebase save failed")) {
+        setError(err.message);
+        return;
+      }
+      
       const statusCode = err?.response?.status
       const backendMessage = err?.response?.data?.detail
 
@@ -186,24 +221,44 @@ export default function Analyze() {
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {history.slice(0, 4).map((item) => (
-                        <div key={item.id} style={{
+                        <motion.div 
+                          key={item.id}
+                          whileHover={{ scale: 1.02, background: 'rgba(255,255,255,0.04)' }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setResult(item);
+                            setPreview(item.thumbnail || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="%23a8ff3e" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" style="background:%230a0f0a"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>');
+                          }}
+                          style={{
                           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
                           borderRadius: '12px', padding: '1rem 1.2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                          backdropFilter: 'blur(10px)'
+                          backdropFilter: 'blur(10px)', cursor: 'pointer'
                         }}>
-                          <div>
-                            <p style={{ color: '#f5f0e8', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, margin: '0 0 0.2rem 0' }}>
-                              {item.disease.includes('·') ? item.disease.split('·')[1].trim() : item.disease}
-                            </p>
-                            <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif', margin: 0 }}>
-                              {item.date} • {item.confidence}% confident
-                            </p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            {item.thumbnail ? (
+                              <img src={item.thumbnail} alt="scan" style={{ width: 44, height: 44, borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                            ) : (
+                              <div style={{ width: 44, height: 44, borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <ScanLine size={20} color="rgba(168,255,62,0.5)" />
+                              </div>
+                            )}
+                            <div>
+                              <p style={{ color: '#f5f0e8', fontSize: '0.95rem', fontFamily: 'Inter, sans-serif', fontWeight: 500, margin: '0 0 0.2rem 0' }}>
+                                {item.disease.includes('·') ? item.disease.split('·')[1].trim() : item.disease}
+                              </p>
+                              <p style={{ color: 'rgba(245,240,232,0.4)', fontSize: '0.8rem', fontFamily: 'Inter, sans-serif', margin: 0 }}>
+                                {item.date} • {item.confidence}% confident
+                              </p>
+                            </div>
                           </div>
-                          <div style={{
-                            width: 8, height: 8, borderRadius: '50%',
-                            background: item.disease.toLowerCase().includes('healthy') ? '#a8ff3e' : '#ffc844'
-                          }} />
-                        </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{
+                              width: 8, height: 8, borderRadius: '50%',
+                              background: item.disease.toLowerCase().includes('healthy') ? '#a8ff3e' : '#ffc844'
+                            }} />
+                            <ChevronRight size={18} color="rgba(245,240,232,0.4)" />
+                          </div>
+                        </motion.div>
                       ))}
                     </div>
                   </motion.div>
