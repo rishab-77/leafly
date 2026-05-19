@@ -10,23 +10,20 @@ class_names = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load model once when API starts."""
     global model, class_names
-    print("[Leafly] Starting API...")
+    print("🌱 Starting Leafly API...")
     model, class_names = load_model()
     yield
-    print("[Leafly] Shutting down API...")
+    print("🛑 Shutting down Leafly API...")
 
 
-# Create app
 app = FastAPI(
     title="Leafly — Plant Disease Detection API",
     description="Upload a leaf image to detect plant disease.",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan
 )
 
-# Allow frontend to call API
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -37,40 +34,51 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {
-        "message": "🌱 Leafly API is running!",
-        "docs": "/docs"
-    }
+    return {"message": "🌱 Leafly API is running!", "docs": "/docs"}
 
 
 @app.get("/health")
 def health():
     return {
-        "status": "healthy",
+        "status":       "healthy",
         "model_loaded": model is not None,
-        "num_classes": len(class_names) if class_names else 0
+        "num_classes":  len(class_names) if class_names else 0
     }
 
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    # Validate file type
     if file.content_type not in ["image/jpeg", "image/png", "image/jpg"]:
         raise HTTPException(
             status_code=400,
             detail="Only JPEG and PNG images are supported."
         )
 
-    # Read image bytes
     image_bytes = await file.read()
 
-    # Run prediction
     try:
-        disease, confidence, breakdown = predict_image(image_bytes, model, class_names)
+        disease, confidence, breakdown, _, status = predict_image(
+            image_bytes, model, class_names
+        )
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+    if status == "no_leaf":
         raise HTTPException(
-            status_code=500,
-            detail=f"Prediction failed: {str(e)}"
+            status_code=422,
+            detail="No leaf detected. Please upload a clear close-up photo of a single plant leaf."
+        )
+
+    if status == "high_entropy":
+        raise HTTPException(
+            status_code=422,
+            detail="This leaf doesn't appear to match any supported plant diseases. Leafly supports Pepper, Potato, and Tomato leaves only."
+        )
+
+    if status == "low_confidence":
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unable to classify with enough confidence ({confidence}%). Please upload a clearer, well-lit close-up of a single leaf."
         )
 
     return {

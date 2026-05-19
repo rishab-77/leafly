@@ -95,7 +95,7 @@ export default function Analyze() {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
       setResult(res.data)
-      
+
       // Save to history
       const newScan = {
         id: Date.now(),
@@ -105,7 +105,7 @@ export default function Analyze() {
         thumbnail: thumbnailBase64,
         date: new Date().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' })
       }
-      
+
       if (currentUser) {
         try {
           await addDoc(collection(db, 'scans'), {
@@ -126,28 +126,23 @@ export default function Analyze() {
         })
       }
 
-      setResult(res.data)
       setSearchParams({ view: newScan.id })
-      
+
     } catch (err) {
-      if (err.message && err.message.startsWith("Firebase save failed")) {
-        setError(err.message);
-        return;
+      if (err.message?.startsWith("Firebase save failed")) {
+        setError(err.message)
+        return
       }
-      
-      const statusCode = err?.response?.status
+
+      const statusCode     = err?.response?.status
       const backendMessage = err?.response?.data?.detail
 
       if (!err?.response) {
-        setError(
-          `Cannot reach Leafly API at ${API_BASE_URL}. Start the backend and verify VITE_API_URL in frontend/.env, then restart Vite.`
-        )
+        setError(`Cannot reach Leafly API at ${API_BASE_URL}. Make sure the backend is running.`)
       } else if (backendMessage) {
-        setError(`Analysis failed (${statusCode ?? 'error'}): ${backendMessage}`)
+        setError(`${backendMessage}`)
       } else {
-        setError(
-          `Analysis failed with status ${statusCode ?? 'unknown'}. Make sure the Leafly API is running and VITE_API_URL is configured correctly.`
-        )
+        setError(`Analysis failed (${statusCode ?? 'unknown'}). Make sure the Leafly API is running.`)
       }
     } finally {
       setLoading(false)
