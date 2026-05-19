@@ -5,6 +5,9 @@ import ResultCard from '../components/ResultCard'
 import StatsDashboard from '../components/StatsDashboard'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Clock, ChevronRight } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { db } from '../firebase'
+import { collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -14,11 +17,33 @@ export default function Analyze() {
   const [preview, setPreview] = useState(null)
   const [error, setError]     = useState(null)
   
-  // Load history from localStorage
-  const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem('leafly_history')
-    return saved ? JSON.parse(saved) : []
-  })
+  const { currentUser } = useAuth()
+  const [history, setHistory] = useState([])
+
+  // Load history
+  useEffect(() => {
+    if (currentUser) {
+      const fetchHistory = async () => {
+        try {
+          const q = query(
+            collection(db, 'scans'), 
+            where('userId', '==', currentUser.uid), 
+            orderBy('timestamp', 'desc'), 
+            limit(10)
+          );
+          const querySnapshot = await getDocs(q);
+          const historyData = querySnapshot.docs.map(doc => doc.data());
+          setHistory(historyData);
+        } catch(err) {
+          console.error("Error fetching history:", err)
+        }
+      };
+      fetchHistory();
+    } else {
+      const saved = localStorage.getItem('leafly_history')
+      setHistory(saved ? JSON.parse(saved) : [])
+    }
+  }, [currentUser])
 
   const handleAnalyze = async (file) => {
     setLoading(true)
@@ -41,11 +66,25 @@ export default function Analyze() {
         confidence: res.data.confidence,
         date: new Date().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' })
       }
-      setHistory(prev => {
-        const updated = [newScan, ...prev].slice(0, 10) // Keep more for better stats
-        localStorage.setItem('leafly_history', JSON.stringify(updated))
-        return updated
-      })
+      
+      if (currentUser) {
+        try {
+          await addDoc(collection(db, 'scans'), {
+            ...newScan,
+            userId: currentUser.uid,
+            timestamp: serverTimestamp()
+          });
+          setHistory(prev => [newScan, ...prev].slice(0, 10));
+        } catch(e) {
+          console.error("Error adding to Firestore: ", e);
+        }
+      } else {
+        setHistory(prev => {
+          const updated = [newScan, ...prev].slice(0, 10)
+          localStorage.setItem('leafly_history', JSON.stringify(updated))
+          return updated
+        })
+      }
       
     } catch (err) {
       const statusCode = err?.response?.status

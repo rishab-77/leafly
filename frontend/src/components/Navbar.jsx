@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
-import { Leaf } from 'lucide-react'
+import { Leaf, LogOut, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const links = [
   { label: 'How It Works', path: '/how-it-works' },
@@ -10,6 +11,7 @@ const links = [
 
 export default function Navbar() {
   const location = useLocation()
+  const { currentUser, logout } = useAuth()
 
   return (
     <motion.nav
@@ -64,6 +66,38 @@ export default function Navbar() {
           )
         })}
 
+        <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }}></div>
+
+        {currentUser ? (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => logout()}
+            style={{
+              background: 'transparent', border: 'none',
+              color: 'rgba(245,240,232,0.7)', display: 'flex', alignItems: 'center', gap: '0.5rem',
+              cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '0.9rem',
+            }}
+          >
+            <LogOut size={16} /> Logout
+          </motion.button>
+        ) : (
+          <Link to="/login" style={{ textDecoration: 'none' }}>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{
+                background: 'transparent', border: '1px solid rgba(168,255,62,0.4)',
+                color: '#a8ff3e', padding: '0.4rem 1rem', borderRadius: '100px',
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '0.9rem',
+              }}
+            >
+              <User size={16} /> Login
+            </motion.button>
+          </Link>
+        )}
+
         <Link to="/analyze" className="nav-link nav-cta">
           <motion.button
             whileHover={{ scale: 1.03, boxShadow: '0 12px 32px rgba(168,255,62,0.18)' }}
@@ -71,6 +105,7 @@ export default function Navbar() {
             style={{
               background: 'var(--lime)', color: 'var(--forest)',
               borderRadius: '100px', padding: '0.65rem 1.55rem',
+              border: 'none',
               fontFamily: 'DM Sans, sans-serif', fontSize: '0.9rem', fontWeight: 500,
               cursor: 'pointer', letterSpacing: '0.02em'
             }}
