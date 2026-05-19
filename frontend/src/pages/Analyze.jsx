@@ -8,6 +8,7 @@ import { Clock, ChevronRight, ScanLine } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { db } from '../firebase'
 import { collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore'
+import { useSearchParams } from 'react-router-dom'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -39,6 +40,17 @@ export default function Analyze() {
   
   const { currentUser } = useAuth()
   const [history, setHistory] = useState([])
+  const [searchParams, setSearchParams] = useSearchParams()
+  const viewId = searchParams.get('view')
+
+  // Handle browser back button (when URL search param is cleared)
+  useEffect(() => {
+    if (!viewId && result) {
+      setResult(null)
+      setPreview(null)
+      setError(null)
+    }
+  }, [viewId])
 
   // Load history
   useEffect(() => {
@@ -115,6 +127,7 @@ export default function Analyze() {
       }
 
       setResult(res.data)
+      setSearchParams({ view: newScan.id })
       
     } catch (err) {
       if (err.message && err.message.startsWith("Firebase save failed")) {
@@ -145,6 +158,7 @@ export default function Analyze() {
     setResult(null)
     setPreview(null)
     setError(null)
+    setSearchParams({})
   }
 
   return (
@@ -228,6 +242,7 @@ export default function Analyze() {
                           onClick={() => {
                             setResult(item);
                             setPreview(item.thumbnail || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="%23a8ff3e" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round" style="background:%230a0f0a"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>');
+                            setSearchParams({ view: item.id });
                           }}
                           style={{
                           background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
