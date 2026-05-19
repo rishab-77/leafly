@@ -144,13 +144,11 @@ export default function Plants() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
                 key={d.id}
-                onClick={() => navigate('/analyze')}
                 whileHover={{ y: -5, scale: 1.02 }}
                 style={{
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.05)',
                   borderRadius: '24px', padding: '1.5rem',
-                  cursor: 'pointer',
                   backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
                   display: 'flex', flexDirection: 'column',
                   // Using CSS variables for hover effects allows us to keep performance high
