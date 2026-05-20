@@ -10,5 +10,4 @@ leafly_data.zip
 leafly_data_v2.zip
 *.pth
 leafly_data_v2.zip
-saved_models/
-notebooks/
+
