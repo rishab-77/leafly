@@ -1,3 +1,11 @@
+---
+title: Leafly
+emoji: 🍃
+colorFrom: green
+colorTo: lime
+sdk: docker
+app_port: 8000
+---
 # 🌱 Leafly - Plant Disease Detection
 
 A modern, premium web application that uses deep transfer learning to detect plant diseases from leaf images. Upload a photo of a plant leaf and get an instant, laboratory-grade disease diagnosis with treatment recommendations.
