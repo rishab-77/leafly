@@ -7,6 +7,7 @@ import io
 import numpy as np
 from pathlib import Path
 from api.preprocessing import get_inference_transforms
+from torchvision import transforms
 
 # Paths
 BASE_DIR         = Path(__file__).parent.parent
@@ -17,7 +18,11 @@ CLASS_NAMES_PATH = BASE_DIR / "saved_models" / "class_names_v2.json"
 DEVICE = torch.device("cpu")
 
 # Image transform — includes segmentation, CLAHE, resize, normalize
-transform = get_inference_transforms(img_size=224)
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
 
 
 def load_model():
