@@ -2,11 +2,12 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from api.predict import load_model, predict_image
+from fastapi.staticfiles import StaticFiles
+import os
 
 # Global model variables
 model       = None
 class_names = None
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -15,7 +16,6 @@ async def lifespan(app: FastAPI):
     model, class_names = load_model()
     yield
     print("🛑 Shutting down Leafly API...")
-
 
 app = FastAPI(
     title="Leafly — Plant Disease Detection API",
@@ -31,12 +31,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/")
-def root():
-    return {"message": "🌱 Leafly API is running!", "docs": "/docs"}
-
-
 @app.get("/health")
 def health():
     return {
@@ -44,7 +38,6 @@ def health():
         "model_loaded": model is not None,
         "num_classes":  len(class_names) if class_names else 0
     }
-
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -87,3 +80,9 @@ async def predict(file: UploadFile = File(...)):
         "breakdown":  breakdown,
         "unit":       "%"
     }
+
+# ====================================================================
+# STATIC FILE MOUNT (Must remain at the absolute bottom of the file)
+# ====================================================================
+if os.path.exists("static"):
+    app.mount("/", StaticFiles(directory="static", html=True), name="static")

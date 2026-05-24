@@ -10,7 +10,7 @@ import { db } from '../firebase'
 import { collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore'
 import { useSearchParams } from 'react-router-dom'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:8000' : '';
 
 const compressImage = (file, maxWidth = 400) => {
   return new Promise((resolve) => {
